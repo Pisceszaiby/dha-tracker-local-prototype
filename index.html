@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DHA House Project Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            /* Clean sleek gray background */
+        }
+    </style>
+</head>
+
+<body class="text-gray-800 p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto">
+
+        <header class="mb-8 text-center md:text-left">
+            <h1 class="text-3xl md:text-4xl font-bold text-green-900">🏠 DHA House Project Tracker</h1>
+            <p class="text-gray-600 mt-2 text-lg">Expense & Projection Management</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+            <div class="bg-white p-6 rounded-xl shadow-md md:col-span-1 h-fit">
+                <h2 class="text-xl font-semibold mb-4 text-gray-700" id="form-title">Add New Expense</h2>
+                <form id="expense-form" class="space-y-4">
+
+                    <div>
+                        <div class="flex justify-between items-end mb-1">
+                            <label class="block text-sm font-medium text-gray-600">Project Phase</label>
+                            <button type="button" onclick="addNewPhase()"
+                                class="text-xs font-semibold text-green-600 hover:text-green-800 transition bg-green-50 px-2 py-1 rounded">
+                                + Add Custom
+                            </button>
+                        </div>
+                        <select id="phase" required
+                            class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 outline-none transition font-medium text-gray-800">
+                        </select>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-end mb-1">
+                            <label class="block text-sm font-medium text-gray-600">Expense Head</label>
+                            <button type="button" onclick="addNewCategory()"
+                                class="text-xs font-semibold text-green-600 hover:text-green-800 transition bg-green-50 px-2 py-1 rounded">
+                                + Add Custom
+                            </button>
+                        </div>
+                        <select id="head" required
+                            class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 outline-none transition">
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Date</label>
+                        <input type="date" id="date" required
+                            class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 outline-none transition">
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Quantity</label>
+                            <input type="number" id="qty" step="0.01" required placeholder="e.g. 50"
+                                class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 outline-none transition">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Unit</label>
+                            <input type="text" id="unit" required placeholder="e.g. Bags"
+                                class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 outline-none transition">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Price / Unit</label>
+                            <input type="number" id="price" step="0.01" required placeholder="e.g. 1200"
+                                class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 outline-none transition">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Total</label>
+                        <input type="text" id="total" readonly
+                            class="w-full bg-gray-100 border border-gray-300 rounded-lg p-2.5 text-gray-700 font-semibold"
+                            placeholder="Calculated automatically">
+                    </div>
+
+                    <div class="flex gap-2">
+                        <button type="submit" id="submit-btn"
+                            class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg shadow-md transition duration-200">
+                            + Save Expense
+                        </button>
+                        <button type="button" id="cancel-edit-btn" onclick="cancelEdit()"
+                            class="hidden w-1/3 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 rounded-lg shadow-md transition duration-200">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="md:col-span-2 space-y-6">
+
+                <div
+                    class="bg-gradient-to-r from-green-600 to-green-800 rounded-xl shadow-md p-6 text-white flex justify-between items-center">
+                    <div>
+                        <p class="text-green-100 font-medium text-lg">Grand Total
+                        </p>
+                        <h3 class="text-4xl font-bold mt-1" id="grand-total-all">PKR 0.00</h3>
+
+                        <div id="filtered-total-container"
+                            class="mt-3 bg-green-900 bg-opacity-40 rounded-lg px-3 py-1.5 hidden inline-block">
+                            <p class="text-sm text-green-100">Filtered Period: <span id="filtered-total"
+                                    class="font-bold text-white ml-1">PKR 0.00</span></p>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-4 flex justify-between items-center">
+                        Summary vs Projections
+                    </h2>
+                    <div id="category-summary" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+
+                    <div class="p-6 border-b border-gray-100 space-y-4">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <h2 class="text-xl font-semibold text-gray-700">Expense Log</h2>
+
+                            <div class="flex flex-wrap gap-2">
+                                <button onclick="exportToCSV()"
+                                    class="text-sm bg-green-600 hover:bg-green-700 text-white font-medium px-3 py-1.5 rounded transition shadow-sm">
+                                    📥 Excel (CSV)
+                                </button>
+                                <button onclick="exportToPDF()"
+                                    class="text-sm bg-gray-600 hover:bg-gray-700 text-white font-medium px-3 py-1.5 rounded transition shadow-sm">
+                                    📄 PDF
+                                </button>
+                                <button onclick="clearAll()"
+                                    class="text-sm text-red-500 hover:text-red-700 font-medium bg-red-50 px-3 py-1.5 rounded transition ml-2">
+                                    Clear All Data
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap items-end gap-3 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-800 mb-1">From Date</label>
+                                <input type="date" id="filter-from"
+                                    class="border border-gray-300 rounded p-1.5 text-sm focus:ring-1 focus:ring-green-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-800 mb-1">To Date</label>
+                                <input type="date" id="filter-to"
+                                    class="border border-gray-300 rounded p-1.5 text-sm focus:ring-1 focus:ring-green-500 outline-none">
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="applyFilters()"
+                                    class="bg-green-600 text-white px-4 py-1.5 rounded text-sm hover:bg-green-700 transition font-medium">Filter</button>
+                                <button onclick="resetFilters()"
+                                    class="bg-gray-200 text-gray-700 px-4 py-1.5 rounded text-sm hover:bg-gray-300 transition font-medium">Reset</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-50 text-gray-800 text-sm  tracking-wider">
+                                    <th class="p-4 border-b">Date</th>
+                                    <th class="p-4 border-b">Phase</th>
+                                    <th class="p-4 border-b">Head</th>
+                                    <th class="p-4 border-b">Qty</th>
+                                    <th class="p-4 border-b">Price</th>
+                                    <th class="p-4 border-b text-right">Total</th>
+                                    <th class="p-4 border-b text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="expense-table-body" class="text-gray-700">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Default Phases & Categories
+        const defaultPhases = ["Grey Structure", "Finishing"];
+        const defaultCategories = [
+            "Archt Design", "Excavation", "Steel", "Cement", "Bricks",
+            "Sand", "Bajri/Crush", "Chokhat", "Electric", "Sewerage",
+            "Labor/Contractor", "Chokidar", "Archt Consultancy",
+            "Misc Expenses", "Allied EMAAR /DHA"
+        ];
+
+        // Load data from localStorage
+        let expenses = JSON.parse(localStorage.getItem('houseExpenses')) || [];
+        let categories = JSON.parse(localStorage.getItem('houseCategories')) || defaultCategories;
+        let phases = JSON.parse(localStorage.getItem('housePhases')) || defaultPhases;
+        let projections = JSON.parse(localStorage.getItem('houseProjections')) || {};
+
+        let editIndex = -1;
+        let currentFilter = { from: '', to: '' };
+
+        // DOM Elements
+        const form = document.getElementById('expense-form');
+        const phaseSelect = document.getElementById('phase');
+        const headSelect = document.getElementById('head');
+        const qtyInput = document.getElementById('qty');
+        const unitInput = document.getElementById('unit');
+        const priceInput = document.getElementById('price');
+        const totalInput = document.getElementById('total');
+        const tableBody = document.getElementById('expense-table-body');
+        const grandTotalAllDisplay = document.getElementById('grand-total-all');
+        const filteredTotalContainer = document.getElementById('filtered-total-container');
+        const filteredTotalDisplay = document.getElementById('filtered-total');
+        const categorySummaryContainer = document.getElementById('category-summary');
+        const dateInput = document.getElementById('date');
+        const submitBtn = document.getElementById('submit-btn');
+        const cancelEditBtn = document.getElementById('cancel-edit-btn');
+        const formTitle = document.getElementById('form-title');
+        const filterFromInput = document.getElementById('filter-from');
+        const filterToInput = document.getElementById('filter-to');
+
+        // Set today's date as default
+        dateInput.valueAsDate = new Date();
+
+        // Render Phases in Dropdown
+        function renderPhases() {
+            phaseSelect.innerHTML = '<option value="" disabled>Select phase...</option>';
+            phases.forEach(ph => {
+                const option = document.createElement('option');
+                option.value = ph;
+                option.textContent = ph;
+                phaseSelect.appendChild(option);
+            });
+            if (editIndex === -1 && phases.length > 0) {
+                phaseSelect.value = phases[0];
+            }
+        }
+
+        // Add New Custom Phase
+        function addNewPhase() {
+            const newPhase = prompt("Enter the name of the new project phase (e.g. Interior):");
+            if (newPhase && newPhase.trim() !== "") {
+                const formattedPhase = newPhase.trim();
+                if (!phases.includes(formattedPhase)) {
+                    phases.push(formattedPhase);
+                    localStorage.setItem('housePhases', JSON.stringify(phases));
+                    renderPhases();
+                } else {
+                    alert("This phase already exists!");
+                }
+                phaseSelect.value = formattedPhase;
+            }
+        }
+
+        // Render Categories in Dropdown
+        function renderCategories() {
+            headSelect.innerHTML = '<option value="" disabled selected>Select a category...</option>';
+            categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                headSelect.appendChild(option);
+            });
+        }
+
+        // Add New Custom Category
+        function addNewCategory() {
+            const newCat = prompt("Enter the name of the new category:");
+            if (newCat && newCat.trim() !== "") {
+                const formattedCat = newCat.trim();
+                if (!categories.includes(formattedCat)) {
+                    categories.push(formattedCat);
+                    localStorage.setItem('houseCategories', JSON.stringify(categories));
+                    renderCategories();
+                } else {
+                    alert("This category already exists!");
+                }
+                headSelect.value = formattedCat;
+            }
+        }
+
+        // Set Category Projection
+        function setProjection(category) {
+            const currentProj = projections[category] ? projections[category] : '';
+            const val = prompt(`Enter projected budget for ${category} (PKR):`, currentProj);
+            if (val !== null) {
+                const num = parseFloat(val);
+                if (!isNaN(num) && num >= 0) {
+                    projections[category] = num;
+                } else if (val.trim() === '') {
+                    delete projections[category]; // Remove projection if empty
+                } else {
+                    alert("Please enter a valid number.");
+                    return;
+                }
+                localStorage.setItem('houseProjections', JSON.stringify(projections));
+                renderApp();
+            }
+        }
+
+        function calculateTotal() {
+            const qty = parseFloat(qtyInput.value) || 0;
+            const price = parseFloat(priceInput.value) || 0;
+            totalInput.value = (qty * price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        qtyInput.addEventListener('input', calculateTotal);
+        priceInput.addEventListener('input', calculateTotal);
+
+        function formatCurrency(num) {
+            return num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function getFilteredExpenses() {
+            return expenses.filter(expense => {
+                if (currentFilter.from && expense.date < currentFilter.from) return false;
+                if (currentFilter.to && expense.date > currentFilter.to) return false;
+                return true;
+            });
+        }
+
+        function getCategoryTotalsForExport(filteredData) {
+            let catTotals = {};
+            categories.forEach(cat => catTotals[cat] = 0);
+            filteredData.forEach(e => {
+                if (catTotals[e.head] !== undefined) catTotals[e.head] += e.total;
+                else catTotals[e.head] = e.total;
+            });
+            return catTotals;
+        }
+
+        // Export to CSV (Excel)
+        function exportToCSV() {
+            const filteredData = getFilteredExpenses();
+            if (filteredData.length === 0) {
+                alert("No data available to export.");
+                return;
+            }
+
+            let csvContent = "Date,Phase,Expense Head,Quantity,Unit,Price per Unit,Total Price\n";
+            let sumTotal = 0;
+
+            filteredData.forEach(e => {
+                const safePhase = e.phase || "Grey Structure";
+                const safeUnit = e.unit || "";
+                csvContent += `${e.date},"${safePhase}","${e.head}",${e.qty},"${safeUnit}",${e.price},${e.total}\n`;
+                sumTotal += e.total;
+            });
+
+            csvContent += `\n,,,,,GRAND TOTAL,${sumTotal}\n\n\n`;
+
+            csvContent += `CATEGORY SUMMARY\n`;
+            csvContent += `Category,Spent,Budget,Percentage Consumed\n`;
+
+            const catTotals = getCategoryTotalsForExport(filteredData);
+            const activeCategories = Object.keys(catTotals).filter(cat => catTotals[cat] > 0 || projections[cat]);
+
+            activeCategories.forEach(cat => {
+                const spent = catTotals[cat] || 0;
+                const budget = projections[cat] || 0;
+                const percent = budget > 0 ? ((spent / budget) * 100).toFixed(2) + '%' : 'N/A';
+                csvContent += `"${cat}",${spent},${budget > 0 ? budget : 'No Budget'},${percent}\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `DHA_House_Expenses_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Export to PDF
+        function exportToPDF() {
+            const filteredData = getFilteredExpenses();
+            if (filteredData.length === 0) {
+                alert("No data available to export.");
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFontSize(18);
+            doc.setTextColor(20, 83, 45); // Green-900
+            doc.text("DHA House Project - Expense Log", 14, 22);
+
+            doc.setFontSize(10);
+            doc.setTextColor(100, 100, 100);
+            let filterText = "Date Range: All Time";
+            if (currentFilter.from || currentFilter.to) {
+                filterText = `Date Range: ${currentFilter.from || 'Start'} to ${currentFilter.to || 'Present'}`;
+            }
+            doc.text(filterText, 14, 30);
+            doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 35);
+
+            let sumTotal = 0;
+
+            const tableBodyData = filteredData.map(e => {
+                sumTotal += e.total;
+                const safePhase = e.phase || "Grey Structure";
+                const safeUnit = e.unit || "";
+                const qtyStr = safeUnit ? `${e.qty} ${safeUnit}` : `${e.qty}`;
+                return [e.date, safePhase, e.head, qtyStr, formatCurrency(e.price), formatCurrency(e.total)];
+            });
+
+            tableBodyData.push(['', '', '', '', 'GRAND TOTAL', formatCurrency(sumTotal)]);
+
+            doc.autoTable({
+                startY: 42,
+                head: [['Date', 'Phase', 'Expense Head', 'Qty & Unit', 'Price', 'Total (PKR)']],
+                body: tableBodyData,
+                theme: 'grid',
+                headStyles: { fillColor: [22, 163, 74] }, // Green-600
+                styles: { fontSize: 9 },
+                columnStyles: {
+                    5: { halign: 'right', fontStyle: 'bold' }
+                },
+                didParseCell: function (data) {
+                    if (data.row.index === tableBodyData.length - 1) {
+                        data.cell.styles.fillColor = [243, 244, 246];
+                        data.cell.styles.textColor = [0, 0, 0];
+                        data.cell.styles.fontStyle = 'bold';
+                    }
+                }
+            });
+
+            const catTotals = getCategoryTotalsForExport(filteredData);
+            const activeCategories = Object.keys(catTotals).filter(cat => catTotals[cat] > 0 || projections[cat]);
+
+            const summaryBodyData = activeCategories.map(cat => {
+                const spent = catTotals[cat] || 0;
+                const budget = projections[cat] || 0;
+                const percent = budget > 0 ? ((spent / budget) * 100).toFixed(2) + '%' : 'N/A';
+                return [cat, formatCurrency(spent), budget > 0 ? formatCurrency(budget) : 'N/A', percent];
+            });
+
+            if (summaryBodyData.length > 0) {
+                const finalY = doc.lastAutoTable.finalY || 42;
+                doc.setFontSize(14);
+                doc.setTextColor(20, 83, 45); // Green-900
+                doc.text("Summary vs Projections", 14, finalY + 15);
+
+                doc.autoTable({
+                    startY: finalY + 20,
+                    head: [['Category', 'Spent (PKR)', 'Budget (PKR)', '% Consumed']],
+                    body: summaryBodyData,
+                    theme: 'grid',
+                    headStyles: { fillColor: [21, 128, 61] }, // Green-700
+                    styles: { fontSize: 9 },
+                    columnStyles: {
+                        1: { halign: 'right' },
+                        2: { halign: 'right' },
+                        3: { halign: 'right', fontStyle: 'bold' }
+                    }
+                });
+            }
+
+            doc.save(`DHA_House_Expenses_${new Date().toISOString().split('T')[0]}.pdf`);
+        }
+
+        function applyFilters() {
+            currentFilter.from = filterFromInput.value;
+            currentFilter.to = filterToInput.value;
+            renderApp();
+        }
+
+        function resetFilters() {
+            filterFromInput.value = '';
+            filterToInput.value = '';
+            currentFilter = { from: '', to: '' };
+            renderApp();
+        }
+
+        function renderApp() {
+            tableBody.innerHTML = '';
+            categorySummaryContainer.innerHTML = '';
+
+            let allTimeGrandTotal = 0;
+            let filteredGrandTotal = 0;
+            let categoryTotals = {};
+
+            categories.forEach(cat => categoryTotals[cat] = 0);
+
+            expenses.forEach(expense => {
+                allTimeGrandTotal += expense.total;
+            });
+
+            let displayExpenses = [];
+            expenses.forEach((expense, index) => {
+                let include = true;
+                if (currentFilter.from && expense.date < currentFilter.from) include = false;
+                if (currentFilter.to && expense.date > currentFilter.to) include = false;
+
+                if (include) {
+                    expense.originalIndex = index;
+                    displayExpenses.push(expense);
+                    filteredGrandTotal += expense.total;
+
+                    if (categoryTotals[expense.head] !== undefined) {
+                        categoryTotals[expense.head] += expense.total;
+                    } else {
+                        categoryTotals[expense.head] = expense.total;
+                    }
+                }
+            });
+
+            if (displayExpenses.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-gray-400">No expenses found for this criteria.</td></tr>`;
+            }
+
+            displayExpenses.forEach(expense => {
+                const isEditing = expense.originalIndex === editIndex;
+                const rowClass = isEditing ? "bg-green-50 border-b transition" : "border-b hover:bg-gray-50 transition";
+
+                const safePhase = expense.phase || "Grey Structure";
+                const safeUnit = expense.unit || "";
+                const qtyDisplay = safeUnit ? `${expense.qty} <span class="text-xs text-gray-800">${safeUnit}</span>` : expense.qty;
+
+                const tr = document.createElement('tr');
+                tr.className = rowClass;
+                tr.innerHTML = `
+                    <td class="p-4 text-sm whitespace-nowrap">${expense.date}</td>
+                    <td class="p-4 text-sm text-gray-800">${safePhase}</td>
+                    <td class="p-4 font-medium text-green-900">${expense.head}</td>
+                    <td class="p-4 text-sm">${qtyDisplay}</td>
+                    <td class="p-4 text-sm">${formatCurrency(expense.price)}</td>
+                    <td class="p-4 font-semibold text-right">${formatCurrency(expense.total)}</td>
+                    <td class="p-4 text-center space-x-2 whitespace-nowrap">
+                        <button onclick="editExpense(${expense.originalIndex})" class="text-green-600 hover:text-green-800 bg-green-50 px-3 py-1 rounded text-sm transition">Edit</button>
+                        <button onclick="deleteExpense(${expense.originalIndex})" class="text-red-500 hover:text-red-700 bg-red-50 px-3 py-1 rounded text-sm transition">Delete</button>
+                    </td>
+                `;
+                tableBody.appendChild(tr);
+            });
+
+            grandTotalAllDisplay.innerText = allTimeGrandTotal.toLocaleString() + ' PKR';
+
+            if (currentFilter.from || currentFilter.to) {
+                filteredTotalContainer.classList.remove('hidden');
+                filteredTotalDisplay.innerText = filteredGrandTotal.toLocaleString() + ' PKR';
+            } else {
+                filteredTotalContainer.classList.add('hidden');
+            }
+
+            const activeCategories = Object.keys(categoryTotals).filter(cat => categoryTotals[cat] > 0 || projections[cat]);
+
+            if (activeCategories.length === 0) {
+                categorySummaryContainer.innerHTML = `<p class="text-sm text-gray-800 col-span-full">Add an expense or set a budget to see the breakdown here.</p>`;
+            }
+
+            activeCategories.forEach(category => {
+                const total = categoryTotals[category];
+                const proj = projections[category];
+
+                let progressHTML = '';
+                if (proj) {
+                    const percent = Math.min((total / proj) * 100, 100);
+                    const isOverBudget = total > proj;
+                    const barColor = isOverBudget ? 'bg-red-500' : 'bg-green-500';
+                    const textColor = isOverBudget ? 'text-red-600' : 'text-gray-800';
+
+                    progressHTML = `
+                        <div class="mt-2">
+                            <div class="flex justify-between text-xs mb-1">
+                                <span class="${textColor} font-medium">Spent: ${formatCurrency(total)}</span>
+                                <span class="text-gray-800">Budget: ${formatCurrency(proj)}</span>
+                            </div>
+                            <div class="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+                                <div class="${barColor} h-2 rounded-full transition-all duration-500" style="width: ${percent}%"></div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    progressHTML = `
+                        <div class="mt-2 flex items-center justify-between">
+                            <span class="text-sm font-bold text-gray-800">${formatCurrency(total)}</span>
+                            <span class="text-xs text-gray-400 italic">No budget set</span>
+                        </div>
+                    `;
+                }
+
+                categorySummaryContainer.innerHTML += `
+                    <div class="bg-gray-50 border border-gray-100 p-4 rounded-lg flex flex-col shadow-sm">
+                        <div class="flex justify-between items-start">
+                            <span class="text-xs text-gray-700 uppercase font-bold tracking-wider truncate" title="${category}">${category}</span>
+                            <button onclick="setProjection('${category}')" class="text-[10px] text-green-600 hover:underline bg-green-50 px-2 py-0.5 rounded border border-green-100">Set Budget</button>
+                        </div>
+                        ${progressHTML}
+                    </div>
+                `;
+            });
+
+            localStorage.setItem('houseExpenses', JSON.stringify(expenses));
+        }
+
+        function editExpense(index) {
+            const exp = expenses[index];
+
+            phaseSelect.value = exp.phase || "Grey Structure";
+            headSelect.value = exp.head;
+            dateInput.value = exp.date;
+            qtyInput.value = exp.qty;
+            unitInput.value = exp.unit || "";
+            priceInput.value = exp.price;
+            calculateTotal();
+
+            editIndex = index;
+
+            formTitle.innerText = "Edit Expense";
+            submitBtn.innerText = "Update Expense";
+            submitBtn.classList.replace("bg-green-600", "bg-emerald-600");
+            submitBtn.classList.replace("hover:bg-green-700", "hover:bg-emerald-700");
+            cancelEditBtn.classList.remove("hidden");
+
+            renderApp();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function cancelEdit() {
+            editIndex = -1;
+            resetFormUI();
+            renderApp();
+        }
+
+        function resetFormUI() {
+            if (phases.length > 0) phaseSelect.value = phases[0];
+            headSelect.value = '';
+            qtyInput.value = '';
+            unitInput.value = '';
+            priceInput.value = '';
+            totalInput.value = '';
+            dateInput.valueAsDate = new Date();
+
+            formTitle.innerText = "Add New Expense";
+            submitBtn.innerText = "+ Save Expense";
+            submitBtn.classList.replace("bg-emerald-600", "bg-green-600");
+            submitBtn.classList.replace("hover:bg-emerald-700", "hover:bg-green-700");
+            cancelEditBtn.classList.add("hidden");
+        }
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const phase = phaseSelect.value;
+            const head = headSelect.value;
+            const date = document.getElementById('date').value;
+            const qty = parseFloat(qtyInput.value);
+            const unit = unitInput.value.trim();
+            const price = parseFloat(priceInput.value);
+            const total = qty * price;
+
+            if (editIndex > -1) {
+                expenses[editIndex] = { phase, head, date, qty, unit, price, total };
+                editIndex = -1;
+                resetFormUI();
+            } else {
+                expenses.push({ phase, head, date, qty, unit, price, total });
+
+                headSelect.value = '';
+                qtyInput.value = '';
+                unitInput.value = '';
+                priceInput.value = '';
+                totalInput.value = '';
+            }
+
+            renderApp();
+        });
+
+        function deleteExpense(index) {
+            if (confirm("Are you sure you want to delete this record?")) {
+                if (index === editIndex) cancelEdit();
+                expenses.splice(index, 1);
+                if (editIndex > index) editIndex--;
+                renderApp();
+            }
+        }
+
+        function clearAll() {
+            if (confirm("WARNING: This will delete ALL expense data. Are you sure?")) {
+                expenses = [];
+                cancelEdit();
+                renderApp();
+            }
+        }
+
+        // Initial Render
+        renderPhases();
+        renderCategories();
+        renderApp();
+    </script>
+</body>
+
+</html>
